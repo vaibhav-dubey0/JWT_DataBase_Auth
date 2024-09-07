@@ -1,10 +1,10 @@
-package com.telusko.part29springsecex;
+package com.vaibhav.springsecex;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class Part29SpringSecExApplicationTests {
+class SpringSecExApplicationTests {
 
     @Test
     void contextLoads() {
