@@ -1,43 +1,78 @@
 package com.vaibhav.via_database.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.vaibhav.via_database.model.Student;
+import com.vaibhav.via_database.repo.StudentRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class StudentController {
 
-    private List<Student> students = new ArrayList<>(
-            List.of(
-                    new Student(1, "Navin", 60),
-                    new Student(2, "Kiran", 65)
-            ));
+    @Autowired
+    private StudentRepo studentRepo;
 
-
+    // Get all students
     @GetMapping("/students")
-    public List<Student> getStudents() {
-        return students;
+    public List<Student> getAllStudents() {
+        return studentRepo.findAll();
     }
 
-    @GetMapping("/csrftoken")
-    public CsrfToken getCsrfToken(HttpServletRequest request) {
-        return (CsrfToken) request.getAttribute("_csrf");
-
+    // Get student by ID
+    @GetMapping("student/{id}")
+    public ResponseEntity<Student> getStudentById(@PathVariable int id) {
+        Optional<Student> student = studentRepo.findById(id);
+        return student.map(ResponseEntity::ok)
+                      .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
-    @PostMapping("/students")
-    public Student addStudent(@RequestBody Student student) {
-        students.add(student);
-        return student;
+    // Create a new student
+    @PostMapping("/add")
+    public Student createStudent(@RequestBody Student student) {
+        return studentRepo.save(student);
     }
 
+    // Update an existing student
+    @PutMapping("student/{id}")
+    public ResponseEntity<Student> updateStudent(@PathVariable int id, @RequestBody Student studentDetails) {
+        Optional<Student> optionalStudent = studentRepo.findById(id);
+        
+        if (optionalStudent.isPresent()) {
+            Student student = optionalStudent.get();
+            student.setName(studentDetails.getName());
+            student.setMarks(studentDetails.getMarks());
+            Student updatedStudent = studentRepo.save(student);
+            return ResponseEntity.ok(updatedStudent);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Delete a student
+    @DeleteMapping("student/{id}")
+    public ResponseEntity<Void> deleteStudent(@PathVariable int id) {
+        Optional<Student> student = studentRepo.findById(id);
+        
+        if (student.isPresent()) {
+            studentRepo.delete(student.get());
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Get student by name
+    @GetMapping("/name/{name}")
+    public ResponseEntity<Student> getStudentByName(@PathVariable String name) {
+        Student student = studentRepo.findByName(name);
+        if (student != null) {
+            return ResponseEntity.ok(student);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
+
